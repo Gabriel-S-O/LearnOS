@@ -1,12 +1,14 @@
-import os
+from operator import iadd
 import curses
 import pycfg
 from pyarch import fake_syscall_handler, load_binary_into_memory
 from pyarch import cpu_t
 
-STOP_EXECUTION = 'exit'
-OPEN_CALCULATOR = 'calc'
+DEFAULT_PROCCESS = 'load default'
 CLEAR_CONSOLE = 'clear'
+EXIT_COMMAND = 'exit'
+
+SYS_EXIT = 1
 
 class os_t:
 	def __init__ (self, cpu, memory, terminal):
@@ -34,9 +36,10 @@ class os_t:
 			self.terminal.console_print(strchar)
 			self.console_str += strchar
 		elif key == curses.KEY_BACKSPACE:
-			#self.console_str = self.console_str.rstrip(self.console_str[-1])
-			self.console_str = ''
-			self.terminal.console_print('\r')
+			if len(self.console_str) > 0:
+				self.console_str = self.console_str[:-1]
+				self.terminal.stdscr.addstr('\b \b')
+				self.terminal.stdscr.refresh()
 		elif (key == curses.KEY_ENTER) or (key == ord('\n')):
 			self.verify_input()
 			self.clear()	
@@ -51,16 +54,29 @@ class os_t:
 
 	def keyboard_interrupt_detected(self):
 		self.interrupt_keyboard()
+		self.syscall()
 
 	def verify_input(self):
-		if(self.console_str == STOP_EXECUTION):
-			self.cpu.set_reg(0, 0)
-		elif(self.console_str == CLEAR_CONSOLE):
+		if(self.console_str == CLEAR_CONSOLE):
 			self.terminal.app_print('\r')
+		elif (self.console_str == EXIT_COMMAND):
+			self.cpu.set_reg(0, 1)
+			self.syscall()
+		elif self.console_str == DEFAULT_PROCCESS:
+			self.load_process()
 		else:
 			self.terminal.app_print('\n' + self.console_str)
 		self.syscall()
 
-	def syscall (self):
-		return
-	
+	def load_process(self):
+		self.terminal.app_print("\nLoading default proccess...")
+
+	def syscall_exit(self):
+		self.terminal.end()
+		self.cpu.cpu_alive = False
+		self.terminal.dprint("pysim halted")
+
+	def syscall(self):
+		syscall_code = self.cpu.get_reg(0)
+		if syscall_code == SYS_EXIT:
+			self.syscall_exit()
