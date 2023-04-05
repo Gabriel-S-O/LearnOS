@@ -45,8 +45,12 @@ class os_t:
 			self.clear()	
 
 	def handle_interrupt (self, interrupt):
-		if pycfg.INTERRUPT_KEYBOARD == interrupt:
+		if pycfg.INTERRUPT_MEMORY_PROTECTION_FAULT == interrupt:
+			self.panic("Memory Protection Fault Interruption not Implemented yet")
+		elif pycfg.INTERRUPT_KEYBOARD == interrupt:
 			self.keyboard_interrupt_detected()
+		elif pycfg.INTERRUPT_TIMER == interrupt:
+			self.panic("Timer Interruption not Implemented yet")
 
 	def clear (self):
 		self.terminal.console_print('\r')
@@ -54,19 +58,16 @@ class os_t:
 
 	def keyboard_interrupt_detected(self):
 		self.interrupt_keyboard()
-		self.syscall()
 
 	def verify_input(self):
 		if(self.console_str == CLEAR_CONSOLE):
 			self.terminal.app_print('\r')
 		elif (self.console_str == EXIT_COMMAND):
-			self.cpu.set_reg(0, 1)
-			self.syscall()
+			self.stop_execution
 		elif self.console_str == DEFAULT_PROCCESS:
 			self.load_process()
 		else:
 			self.terminal.app_print('\n' + self.console_str)
-		self.syscall()
 
 	def load_process(self):
 		self.terminal.app_print("\nLoading default proccess...")
