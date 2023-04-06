@@ -8,6 +8,10 @@ DEFAULT_PROCCESS = 'load default'
 CLEAR_CONSOLE = 'clear'
 EXIT_COMMAND = 'exit'
 
+SYS_EXIT = DEFAULT_PROCCESS = 'load default'
+CLEAR_CONSOLE = 'clear'
+EXIT_COMMAND = 'exit'
+
 SYS_EXIT = 1
 
 class os_t:
@@ -37,20 +41,20 @@ class os_t:
 			self.console_str += strchar
 		elif key == curses.KEY_BACKSPACE:
 			if len(self.console_str) > 0:
+				self.terminal.console_print("\r")
 				self.console_str = self.console_str[:-1]
-				self.terminal.stdscr.addstr('\b \b')
-				self.terminal.stdscr.refresh()
+				self.terminal.console_print(self.console_str)
 		elif (key == curses.KEY_ENTER) or (key == ord('\n')):
 			self.verify_input()
 			self.clear()	
 
 	def handle_interrupt (self, interrupt):
 		if pycfg.INTERRUPT_MEMORY_PROTECTION_FAULT == interrupt:
-			self.panic("Memory Protection Fault Interruption not Implemented yet")
+			self.printk("Memory Protection Fault Interruption not Implemented yet")
 		elif pycfg.INTERRUPT_KEYBOARD == interrupt:
 			self.keyboard_interrupt_detected()
 		elif pycfg.INTERRUPT_TIMER == interrupt:
-			self.panic("Timer Interruption not Implemented yet")
+			self.printk("Timer Interruption not Implemented yet")
 
 	def clear (self):
 		self.terminal.console_print('\r')
@@ -63,11 +67,14 @@ class os_t:
 		if(self.console_str == CLEAR_CONSOLE):
 			self.terminal.app_print('\r')
 		elif (self.console_str == EXIT_COMMAND):
-			self.stop_execution
+			self.stop_execution()
 		elif self.console_str == DEFAULT_PROCCESS:
 			self.load_process()
 		else:
 			self.terminal.app_print('\n' + self.console_str)
+
+	def stop_execution(self):
+		self.panic("System interrupted by user")
 
 	def load_process(self):
 		self.terminal.app_print("\nLoading default proccess...")
@@ -81,3 +88,4 @@ class os_t:
 		syscall_code = self.cpu.get_reg(0)
 		if syscall_code == SYS_EXIT:
 			self.syscall_exit()
+			
