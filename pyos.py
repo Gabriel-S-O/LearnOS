@@ -1,8 +1,5 @@
-from operator import iadd
 import curses
 import pycfg
-from pyarch import fake_syscall_handler, load_binary_into_memory
-from pyarch import cpu_t
 
 DEFAULT_PROCCESS = 'load default'
 CLEAR_CONSOLE = 'clear'
@@ -23,6 +20,8 @@ class os_t:
 		self.terminal.enable_curses()
 
 		self.console_str = ""
+
+		self.current_process = None
 		
 	def printk(self, msg):
 		self.terminal.kernel_print("kernel: " + msg + "\n")
@@ -75,17 +74,55 @@ class os_t:
 
 	def stop_execution(self):
 		self.panic("System interrupted by user")
-
+	
+	def create_process(self, pid, program):
+		memory_start = 0
+		memory_end = self.memory.size - 1
+		new_process = Process(pid, "ready", memory_start, memory_end, program)
+		self.current_process = new_process
+		new_process.start()
+	
 	def load_process(self):
-		self.terminal.app_print("\nLoading default proccess...")
-
-	def syscall_exit(self):
-		self.terminal.end()
-		self.cpu.cpu_alive = False
-		self.terminal.dprint("pysim halted")
-
-	def syscall(self):
-		syscall_code = self.cpu.get_reg(0)
-		if syscall_code == SYS_EXIT:
-			self.syscall_exit()
+		self.terminal.app_print("\nLoading default process...")
+		self.create_process(1, "default_program.bin")
 			
+
+class Process:
+    def __init__(self, pid, state, memory_start, memory_end, program):
+        self.pid = pid
+        self.state = state
+        self.memory_start = memory_start
+        self.memory_end = memory_end
+        self.program = program
+
+        self.pc = 0
+        self.general_purpose_registers = [0] * 32
+
+        self.memory_descriptors = []
+
+        self.open_file_descriptors = []
+
+        self.metadata = {"state": self.state}
+
+    def __str__(self):
+        return "Process: (PID: {}, State: {}, Memory Space: {}, Program: {})".format(self.pid, self.state, self.memory_space, self.program)
+
+    def start(self):
+       self.state = "running"
+
+    def add_memory_descriptor(self, start_address, size):
+        descriptor = {"start_address": start_address, "size": size}
+        self.memory_descriptors.append(descriptor)
+
+    def open_file(self, file_path, mode):
+        file_descriptor = open(file_path, mode)
+        self.open_file_descriptors.append(file_descriptor)
+        return file_descriptor
+
+    def close_file(self, file_descriptor):
+        if file_descriptor in self.open_file_descriptors:
+            file_descriptor.close()
+            self.open_file_descriptors.remove(file_descriptor)
+
+    def update_metadata(self, key, value):
+        self.metadata[key] = value
