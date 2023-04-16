@@ -5,10 +5,6 @@ DEFAULT_PROCCESS = 'load default'
 CLEAR_CONSOLE = 'clear'
 EXIT_COMMAND = 'exit'
 
-SYS_EXIT = DEFAULT_PROCCESS = 'load default'
-CLEAR_CONSOLE = 'clear'
-EXIT_COMMAND = 'exit'
-
 SYS_EXIT = 1
 
 class os_t:
