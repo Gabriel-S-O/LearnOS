@@ -81,6 +81,16 @@ class os_t:
 	def load_process(self):
 		self.terminal.app_print("\nLoading default process...")
 		self.create_process(1, "default_program.bin")
+		
+	def syscall_exit(self):
+		self.terminal.end()
+		self.cpu.cpu_alive = False
+		self.terminal.dprint("pysim halted")
+
+	def syscall(self):
+		syscall_code = self.cpu.get_reg(0)
+		if syscall_code == SYS_EXIT:
+			self.syscall_exit()
 			
 
 class Process:
@@ -92,7 +102,7 @@ class Process:
         self.program = program
 
         self.pc = 0
-        self.general_purpose_registers = [0] * 32
+        self.general_purpose_registers = [0] * 8
 
         self.memory_descriptors = []
 
