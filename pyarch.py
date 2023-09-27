@@ -4,9 +4,9 @@ import pycfg
 import os
 
 def extract_bits (num, bit_init, bit_len):
-    num = num >> bit_init
-    mask = (1 << bit_len) - 1
-    return num & mask
+	num = num >> bit_init
+	mask = (1 << bit_len) - 1
+	return num & mask
 
 class terminal_video_buffer_t:
 	def __init__ (self, win):
