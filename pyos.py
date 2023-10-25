@@ -34,12 +34,12 @@ class os_t:
 			strchar = chr(key)
 			self.terminal.console_print(strchar)
 			self.console_str += strchar
-		elif key == curses.KEY_BACKSPACE:
+		if (key == ord('\b')):
 			if len(self.console_str) > 0:
-				self.terminal.console_print("\r")
 				self.console_str = self.console_str[:-1]
+				self.terminal.enable_curses()
 				self.terminal.console_print(self.console_str)
-		elif (key == curses.KEY_ENTER) or (key == ord('\n')):
+		elif (key == ord('\n')):
 			self.verify_input()
 			self.clear()	
 
